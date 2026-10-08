@@ -36,6 +36,7 @@ import { setupPageTranslationHandlers } from "./page-translation"
 import { proxyFetch } from "./proxy-fetch"
 import { setupSidePanelMessageHandler } from "./side-panel"
 import { setupSubtitlesTranslationHandlers } from "./subtitles-translation"
+import { setUpTermInsightCleanup } from "./term-insight-cleanup"
 import { translationMessage } from "./translation-signal"
 import { setupTTSPlaybackMessageHandlers } from "./tts-playback"
 import { setupUninstallSurvey } from "./uninstall-survey"
@@ -137,6 +138,7 @@ export default defineBackground({
     setupSubtitlesTranslationHandlers()
     setupVideoSummaryHandlers()
     void setUpDatabaseCleanup()
+    void setUpTermInsightCleanup()
     setUpConfigBackup()
 
     // Start config and i18n initialization without delaying synchronous listener

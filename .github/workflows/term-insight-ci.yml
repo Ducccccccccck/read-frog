@@ -28,6 +28,12 @@ jobs:
         run: pnpm install --frozen-lockfile
         shell: bash
 
+      - name: Format check
+        id: fmt
+        continue-on-error: true
+        run: pnpm exec nx fmt:check 2>&1 | tee fmt.log
+        shell: bash
+
       - name: Lint and type check
         id: lint
         continue-on-error: true
@@ -51,10 +57,11 @@ jobs:
         run: |
           {
             echo "## Results"
+            echo "- format: ${{ steps.fmt.outcome }}"
             echo "- lint/type-check: ${{ steps.lint.outcome }}"
             echo "- tests: ${{ steps.test.outcome }}"
             echo "- build: ${{ steps.build.outcome }}"
-            for f in lint test build; do
+            for f in fmt lint test build; do
               if [ -f "$f.log" ] && [ "$(grep -ciE 'error|fail' "$f.log")" -gt 0 ]; then
                 echo
                 echo "### $f (last 60 lines)"

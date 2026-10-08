@@ -8,6 +8,7 @@ import BatchRequestRecord from "./tables/batch-request-record"
 import Glossary from "./tables/glossary"
 import GlossarySyncSnapshot from "./tables/glossary-sync-snapshot"
 import GlossaryTerm from "./tables/glossary-term"
+import TermInsightCache from "./tables/term-insight-cache"
 import TranslationCache from "./tables/translation-cache"
 
 export default class AppDB extends Dexie {
@@ -24,6 +25,8 @@ export default class AppDB extends Dexie {
   glossaryTerm!: EntityTable<GlossaryTerm, "id">
 
   glossarySyncSnapshot!: EntityTable<GlossarySyncSnapshot, "id">
+
+  termInsightCache!: EntityTable<TermInsightCache, "key">
 
   constructor() {
     super(`${upperCamelCase(APP_NAME)}DB`)
@@ -154,6 +157,42 @@ export default class AppDB extends Dexie {
       glossarySyncSnapshot: `
         id`,
     })
+    // v7 adds the cache of per-page specialized terms (Persian + English
+    // explanations). A new store needs no upgrade function; every version still
+    // restates the full store set, so the seven above are repeated verbatim.
+    this.version(7).stores({
+      translationCache: `
+        key,
+        translation,
+        createdAt`,
+      batchRequestRecord: `
+        key,
+        createdAt,
+        originalRequestCount,
+        provider,
+        model`,
+      articleSummaryCache: `
+        key,
+        createdAt`,
+      aiSegmentationCache: `
+        key,
+        createdAt`,
+      glossary: `
+        id,
+        enabled,
+        createdAt`,
+      glossaryTerm: `
+        id,
+        glossaryId,
+        &[glossaryId+targetLang+matchKey],
+        enabled,
+        updatedAt`,
+      glossarySyncSnapshot: `
+        id`,
+      termInsightCache: `
+        key,
+        createdAt`,
+    })
     this.translationCache.mapToClass(TranslationCache)
     this.batchRequestRecord.mapToClass(BatchRequestRecord)
     this.articleSummaryCache.mapToClass(ArticleSummaryCache)
@@ -161,5 +200,6 @@ export default class AppDB extends Dexie {
     this.glossary.mapToClass(Glossary)
     this.glossaryTerm.mapToClass(GlossaryTerm)
     this.glossarySyncSnapshot.mapToClass(GlossarySyncSnapshot)
+    this.termInsightCache.mapToClass(TermInsightCache)
   }
 }

@@ -24,6 +24,7 @@ import type { MatchedTerm } from "@/utils/glossary/types"
 import type { HostedAiStatus } from "@/utils/hosted-ai/types"
 import type { PromptableProviderRef, SerializableProviderRef } from "@/utils/providers/provider-ref"
 import type { EdgeTTSVoice } from "@/utils/server/edge-tts/types"
+import type { TermInsight } from "@/utils/term-insight/types"
 import { defineExtensionMessaging } from "@webext-core/messaging"
 
 interface ProtocolMap {
@@ -143,6 +144,15 @@ interface ProtocolMap {
       webContent: string
     },
   ) => Promise<string | null>
+  // The page's specialized terms, explained in Persian and English. One model
+  // call per page, cached in the background. `null` means "no answer" (nothing
+  // to send, or the call failed); `[]` means the page has no such terms.
+  getOrGenerateWebPageTerms: (
+    data: ProviderRequestRouting<PromptableProviderRef> & {
+      webTitle: string
+      webContent: string
+    },
+  ) => Promise<TermInsight[] | null>
   enqueueSubtitlesTranslateRequest: (data: {
     text: string
     langConfig: Config["language"]

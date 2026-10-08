@@ -21,6 +21,7 @@ import { onMessage } from "@/utils/message"
 import { getTranslatePrompt } from "@/utils/prompts/translate"
 import { canProviderRefGenerateText } from "@/utils/providers/provider-ref"
 import { TranslationCancelledError } from "@/utils/request/cancellation"
+import { getOrGenerateTermInsights } from "./term-insight"
 import { getOrGenerateTranslationContextSummary } from "./translation-context-summary"
 import {
   buildTranslationScopeKey,
@@ -196,6 +197,29 @@ export function setupPageTranslationHandlers(): void {
       title: webTitle,
       textContent: webContent,
       cacheKeyParts: [webTitle, Sha256Hex(cleanText(webContent))],
+      requestQueue,
+    })
+  })
+
+  onMessage("getOrGenerateWebPageTerms", async (message) => {
+    validateProviderHostedFeature(message.data.providerRef, message.data.hostedFeature)
+    const { requestQueue } = await queuesPromise
+    const { webTitle, webContent, providerRef } = message.data
+
+    if (!webContent) {
+      return null
+    }
+
+    // Same trust-boundary check as the summary handler: a stale content script
+    // can send a translate-only ref, which has no model to prompt.
+    if (!canProviderRefGenerateText(providerRef)) {
+      return null
+    }
+
+    return await getOrGenerateTermInsights({
+      ...message.data,
+      title: webTitle,
+      textContent: webContent,
       requestQueue,
     })
   })
