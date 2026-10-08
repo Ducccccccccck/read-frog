@@ -199,6 +199,7 @@ describe("translation queue helpers", () => {
     expect(onMessageMock.mock.calls.map(([name]) => name)).toEqual([
       "enqueueTranslateRequest",
       "getOrGenerateWebPageSummary",
+      "getOrGenerateWebPageTerms",
       "cancelPageTranslationRequests",
       "enqueueSubtitlesTranslateRequest",
       "getSubtitlesSummary",
