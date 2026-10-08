@@ -1,0 +1,74 @@
+name: Term Insight - CI
+
+on:
+  push:
+    branches:
+      - feature/term-insight
+  workflow_dispatch:
+
+env:
+  WXT_SKIP_ENV_VALIDATION: true
+  SKIP_FREE_API: true
+
+jobs:
+  check:
+    name: Install, check, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v3
+        with:
+          cache: true
+          install: false
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+        shell: bash
+
+      - name: Lint and type check
+        id: lint
+        continue-on-error: true
+        run: pnpm lint 2>&1 | tee lint.log
+        shell: bash
+
+      - name: Run tests
+        id: test
+        continue-on-error: true
+        run: pnpm test --exclude="**/free-api.test.ts" 2>&1 | tee test.log
+        shell: bash
+
+      - name: Build and zip
+        id: build
+        continue-on-error: true
+        run: pnpm zip 2>&1 | tee build.log
+        shell: bash
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Results"
+            echo "- lint/type-check: ${{ steps.lint.outcome }}"
+            echo "- tests: ${{ steps.test.outcome }}"
+            echo "- build: ${{ steps.build.outcome }}"
+            for f in lint test build; do
+              if [ -f "$f.log" ] && [ "$(grep -ciE 'error|fail' "$f.log")" -gt 0 ]; then
+                echo
+                echo "### $f (last 60 lines)"
+                echo '```'
+                tail -n 60 "$f.log"
+                echo '```'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      - name: Upload extension zip
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: .output/*.zip
