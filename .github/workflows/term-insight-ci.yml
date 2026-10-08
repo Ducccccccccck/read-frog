@@ -72,3 +72,4 @@ jobs:
         with:
           name: extension-zip
           path: .output/*.zip
+          include-hidden-files: true
