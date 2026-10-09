@@ -4,7 +4,7 @@ import type { Config } from "@/types/config/config"
 import type { LLMProviderConfig, TranslateProviderConfig } from "@/types/config/provider"
 import type { TranslationTextFormat } from "@/types/config/translate"
 import type { WebPagePromptContext } from "@/types/content"
-import type { MatchedTerm } from "@/utils/glossary/types"
+import type { GlossaryMatcher, MatchedTerm } from "@/utils/glossary/types"
 import type { PromptableProviderRef, SerializableProviderRef } from "@/utils/providers/provider-ref"
 import type { ResolvedProviderRef } from "@/utils/providers/provider-registry"
 import { LANG_CODE_TO_EN_NAME } from "@read-frog/definitions"
@@ -21,6 +21,7 @@ import { getTranslatePrompt } from "@/utils/prompts/translate"
 import { serializeProviderRef } from "@/utils/providers/provider-ref"
 import { resolveProviderRefForCapability } from "@/utils/providers/provider-registry"
 import { TranslationCancelledError } from "@/utils/request/cancellation"
+import { mergeDiscoveredTerms } from "@/utils/term-insight/to-glossary"
 import { Sha256Hex } from "../../hash"
 import { sendMessage } from "../../message"
 import { getInMemoryTranslation, storeInMemoryTranslation } from "./in-memory-translation-cache"
@@ -300,6 +301,13 @@ export interface TranslateTextOptions {
    */
   glossaryEnabled?: boolean
   /**
+   * Matcher over the specialized terms discovered on this page (Persian
+   * wording). Only terms that occur in `text` reach the prompt, and the user's
+   * own glossary wins on the same term. `null`/absent leaves the prompt, and so
+   * the cache key, exactly as it was without this feature.
+   */
+  pageTermsMatcher?: GlossaryMatcher | null
+  /**
    * Which hosted route a system provider bills against; local providers
    * ignore it. Required so every entry point states its route where the
    * function is named — a defaulted route once let page translation gate on
@@ -325,6 +333,7 @@ export async function translateTextCore(options: TranslateTextOptions): Promise<
     sessionId,
     forceRetranslation = false,
     glossaryEnabled = false,
+    pageTermsMatcher = null,
     hostedFeature,
   } = options
 
@@ -352,17 +361,24 @@ export async function translateTextCore(options: TranslateTextOptions): Promise<
   // either side of an edit made while this page was still translating, and it
   // is the only thing that tells the background which wording is the newer one
   // (see `mergeBatchGlossaryTerms`).
-  const { terms: glossaryTerms, revision: glossaryRevision } = await resolveGlossaryTerms(
+  const { terms: userGlossaryTerms, revision: glossaryRevision } = await resolveGlossaryTerms(
     preparedText,
     glossaryEnabled,
     langConfig.targetCode,
+  )
+  // The terms discovered on the page ride the same channel as the user's
+  // glossary, so the hash, the batch merge and the prompt need no second path.
+  // They are merged AFTER the user's terms and lose to them on the same term.
+  const glossaryTerms = mergeDiscoveredTerms(
+    userGlossaryTerms,
+    pageTermsMatcher ? pageTermsMatcher.match(preparedText) : [],
   )
   // Covers page, input and pure-translate-provider selection runs, which all
   // enter here; the two prompt-building selection paths and subtitles resolve
   // their own terms and report at their own resolve sites.
   trackGlossaryUsed(
     hostedFeature,
-    glossaryTerms,
+    userGlossaryTerms,
     langConfig.targetCode,
     classifyResolvedProvider(providerConfig),
   )

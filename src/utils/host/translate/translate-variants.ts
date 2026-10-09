@@ -3,6 +3,7 @@ import type { HostedAiTextStreamRoute } from "@/types/background-stream"
 import type { Config, InputTranslationLang } from "@/types/config/config"
 import type { TranslateProviderConfig } from "@/types/config/provider"
 import type { TranslationTextFormat } from "@/types/config/translate"
+import type { GlossaryMatcher } from "@/utils/glossary/types"
 import type { ResolvedProviderRef } from "@/utils/providers/provider-registry"
 import { getDetectedCodeFromStorage, getFinalSourceCode } from "@/utils/config/languages"
 import { logger } from "@/utils/logger"
@@ -13,6 +14,7 @@ import {
 } from "@/utils/providers/provider-ref"
 import { resolveProviderRefForCapability } from "@/utils/providers/provider-registry"
 import { getLocalConfig } from "../../config/storage"
+import { getPageTermsMatcher } from "./page-terms"
 import { shouldSkipAsTargetLanguage } from "./target-language-skip"
 import { prepareTranslationText } from "./text-preparation"
 import {
@@ -86,6 +88,44 @@ async function getWebPagePromptContext(
   }
 }
 
+/**
+ * The matcher over this page's discovered specialized terms, or `null`.
+ *
+ * Rides the existing "AI content-aware" switch rather than a setting of its own
+ * (a new setting needs a config migration): a user who asked for page-aware
+ * translation gets terminology that is consistent across the page. Pure
+ * translate providers cannot be prompted, so they skip it.
+ */
+async function getPageTermsMatcherForPage(
+  config: Config,
+  providerConfig: ResolvedProviderRef<TranslateProviderConfig>,
+  sessionId: string | undefined,
+): Promise<GlossaryMatcher | null> {
+  if (!config.pageTranslation.enableAIContentAware) {
+    return null
+  }
+  if (!canResolvedProviderRefGenerateText(providerConfig)) {
+    return null
+  }
+
+  try {
+    const context = await getOrCreateWebPageContext()
+    if (!context) {
+      return null
+    }
+    return await getPageTermsMatcher({
+      context,
+      providerRef: await resolvePageProviderRef(providerConfig, sessionId, "pageTranslation"),
+      targetLang: config.language.targetCode,
+    })
+  } catch (error) {
+    // Optional context: a hosted denial or any failure here must not abort the
+    // translation, which resolves the same provider and reports its own error.
+    logger.warn("Could not load page terms; translating without them", error)
+    return null
+  }
+}
+
 async function translateTextUsingPageConfig(
   config: Config,
   text: string,
@@ -102,6 +142,7 @@ async function translateTextUsingPageConfig(
     // Session captured at pipeline entry by the caller; see translateTextForPage.
     sessionId?: string
     forceRetranslation?: boolean
+    pageTermsMatcher?: GlossaryMatcher | null
   } = {},
 ): Promise<string> {
   const preparedText = prepareTranslationText(text)
@@ -139,6 +180,7 @@ async function translateTextUsingPageConfig(
     hostedFeature: "pageTranslation",
     enableAIContentAware: config.pageTranslation.enableAIContentAware,
     glossaryEnabled: config.glossary.enabled,
+    pageTermsMatcher: options.pageTermsMatcher,
     extraHashTags: options.extraHashTags,
     webPageContext: options.webPageContext,
     textFormat: options.textFormat,
@@ -169,15 +211,21 @@ export async function translateTextForPage(
   const sessionId = getPageTranslationSessionId() ?? undefined
   const config = await getConfigOrThrow()
   const providerConfig = resolvePageTranslationProvider(config)
-  const webPageContext = await getWebPagePromptContext(
-    providerConfig,
-    config.pageTranslation.enableAIContentAware,
-    true,
-    "pageTranslation",
-  )
+  // Concurrent: the summary and the term pass are independent model calls, and
+  // running them one after the other would add their latencies together.
+  const [webPageContext, pageTermsMatcher] = await Promise.all([
+    getWebPagePromptContext(
+      providerConfig,
+      config.pageTranslation.enableAIContentAware,
+      true,
+      "pageTranslation",
+    ),
+    getPageTermsMatcherForPage(config, providerConfig, sessionId),
+  ])
 
   return translateTextUsingPageConfig(config, text, {
     webPageContext,
+    pageTermsMatcher,
     textFormat,
     preserveLineBreaks: options?.preserveLineBreaks,
     sessionId,
@@ -193,11 +241,15 @@ export async function translateTextForPageTitle(text: string): Promise<string> {
   const sessionId = getPageTranslationSessionId() ?? undefined
   const config = await getConfigOrThrow()
   const providerConfig = resolvePageTranslationProvider(config)
-  const webPageContext = config.pageTranslation.enableAIContentAware
-    ? await getWebPagePromptContext(providerConfig, true, false, "pageTranslation")
-    : undefined
+  const [webPageContext, pageTermsMatcher] = await Promise.all([
+    config.pageTranslation.enableAIContentAware
+      ? getWebPagePromptContext(providerConfig, true, false, "pageTranslation")
+      : undefined,
+    getPageTermsMatcherForPage(config, providerConfig, sessionId),
+  ])
 
   return translateTextUsingPageConfig(config, text, {
+    pageTermsMatcher,
     extraHashTags: ["pageTitleTranslation"],
     webPageContext: {
       webTitle: text,
