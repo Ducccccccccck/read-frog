@@ -24,7 +24,7 @@ import type { MatchedTerm } from "@/utils/glossary/types"
 import type { HostedAiStatus } from "@/utils/hosted-ai/types"
 import type { PromptableProviderRef, SerializableProviderRef } from "@/utils/providers/provider-ref"
 import type { EdgeTTSVoice } from "@/utils/server/edge-tts/types"
-import type { TermInsight } from "@/utils/term-insight/types"
+import type { TermExplanation, TermInsight } from "@/utils/term-insight/types"
 import { defineExtensionMessaging } from "@webext-core/messaging"
 
 interface ProtocolMap {
@@ -153,6 +153,16 @@ interface ProtocolMap {
       webContent: string
     },
   ) => Promise<TermInsight[] | null>
+  // Explains the reader's selection (a word, term or short phrase) in simple
+  // Persian and English; answered from the page's term pass when it covers it.
+  explainSelectedTerm: (
+    data: ProviderRequestRouting<PromptableProviderRef> & {
+      text: string
+      context: string
+      webTitle: string
+      webContent: string
+    },
+  ) => Promise<TermExplanation | null>
   enqueueSubtitlesTranslateRequest: (data: {
     text: string
     langConfig: Config["language"]

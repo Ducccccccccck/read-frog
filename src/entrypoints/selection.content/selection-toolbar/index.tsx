@@ -22,6 +22,7 @@ import {
 import { getSelectionToolbarItems } from "@/utils/selection-toolbar-items"
 import { cn } from "@/utils/styles/utils"
 import { urlMatchesPattern } from "@/utils/url-pattern"
+import { TermExplainButton } from "../term-card"
 import { buildContextSnapshot, readSelectionSnapshot } from "../utils"
 import { clearSelectionStateAtom, isSelectionToolbarOpenAtom, setSelectionStateAtom } from "./atoms"
 import { CloseButton, DropEvent } from "./close-button"
@@ -641,6 +642,7 @@ export function SelectionToolbar() {
             >
               <div className="no-scrollbar flex max-w-105 items-center overflow-x-auto overflow-y-hidden scroll-driven:scroll-fade-x">
                 <SelectionToolbarPinnedItems />
+                <TermExplainButton />
               </div>
               {hasAnyPinnedItem && <div className="w-px shrink-0 self-stretch bg-border" />}
               <SelectionToolbarMoreMenu />

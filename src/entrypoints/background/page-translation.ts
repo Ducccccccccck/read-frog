@@ -21,6 +21,7 @@ import { onMessage } from "@/utils/message"
 import { getTranslatePrompt } from "@/utils/prompts/translate"
 import { canProviderRefGenerateText } from "@/utils/providers/provider-ref"
 import { TranslationCancelledError } from "@/utils/request/cancellation"
+import { getTermExplanation } from "./term-explain"
 import { getOrGenerateTermInsights } from "./term-insight"
 import { getOrGenerateTranslationContextSummary } from "./translation-context-summary"
 import {
@@ -199,6 +200,15 @@ export function setupPageTranslationHandlers(): void {
       cacheKeyParts: [webTitle, Sha256Hex(cleanText(webContent))],
       requestQueue,
     })
+  })
+
+  onMessage("explainSelectedTerm", async (message) => {
+    validateProviderHostedFeature(message.data.providerRef, message.data.hostedFeature)
+    if (!canProviderRefGenerateText(message.data.providerRef)) {
+      return null
+    }
+    const { requestQueue } = await queuesPromise
+    return await getTermExplanation({ ...message.data, requestQueue })
   })
 
   onMessage("getOrGenerateWebPageTerms", async (message) => {

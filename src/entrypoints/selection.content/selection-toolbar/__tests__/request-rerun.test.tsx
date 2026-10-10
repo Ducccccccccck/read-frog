@@ -49,6 +49,10 @@ vi.mock("@tanstack/hotkeys", async (importOriginal) => {
   }
 })
 
+vi.mock("../../term-card", () => ({
+  TermExplainButton: () => null,
+}))
+
 vi.mock("@/utils/auth/auth-client", () => ({
   authClient: {
     useSession: () => ({

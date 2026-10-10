@@ -13,6 +13,24 @@ import { extractTermInsights, TERM_INSIGHT_MAX_TEXT_LENGTH } from "@/utils/term-
 import { TERM_INSIGHT_VERSION } from "@/utils/term-insight/types"
 import { generateTextForProviderRef } from "./background-stream"
 
+/** Cache key of a page's term pass; shared with the selection card's lookup. */
+export function buildTermInsightCacheKey(
+  title: string,
+  textContent: string,
+  providerRef: PromptableProviderRef,
+): string | null {
+  const preparedText = cleanText(textContent, TERM_INSIGHT_MAX_TEXT_LENGTH)
+  if (!preparedText) {
+    return null
+  }
+  return Sha256Hex(
+    title,
+    Sha256Hex(preparedText),
+    getProviderCacheIdentity(providerRef),
+    TERM_INSIGHT_VERSION,
+  )
+}
+
 /**
  * Specialized terms of a page, explained in Persian and English. One model call
  * per page and provider, cached in IndexedDB: the same pattern as the page
@@ -34,17 +52,10 @@ export async function getOrGenerateTermInsights(
       ? { providerRef: args.providerRef }
       : { providerRef: args.providerRef, hostedFeature: args.hostedFeature }
 
-  const preparedText = cleanText(textContent, TERM_INSIGHT_MAX_TEXT_LENGTH)
-  if (!preparedText) {
+  const cacheKey = buildTermInsightCacheKey(title, textContent, providerRef)
+  if (!cacheKey) {
     return null
   }
-
-  const cacheKey = Sha256Hex(
-    title,
-    Sha256Hex(preparedText),
-    getProviderCacheIdentity(providerRef),
-    TERM_INSIGHT_VERSION,
-  )
 
   const cached = await db.termInsightCache.get(cacheKey)
   if (cached) {

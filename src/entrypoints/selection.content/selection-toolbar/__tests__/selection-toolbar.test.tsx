@@ -17,6 +17,10 @@ function SelectionSessionProbe() {
 }
 
 // Mock child components
+vi.mock("../../term-card", () => ({
+  TermExplainButton: () => null,
+}))
+
 vi.mock("../translate-button", () => ({
   TranslateButton: () => null,
 }))

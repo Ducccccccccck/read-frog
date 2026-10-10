@@ -24,3 +24,9 @@ export const termInsightSchema = z.object({
 })
 
 export type TermInsight = z.infer<typeof termInsightSchema>
+
+/** The explanation card's answer. "page": from the page's term pass, no model call. */
+export interface TermExplanation {
+  insight: TermInsight
+  source: "page" | "model"
+}

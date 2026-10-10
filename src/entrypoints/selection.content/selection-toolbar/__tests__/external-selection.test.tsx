@@ -11,6 +11,10 @@ import { isSelectionToolbarOpenAtom, selectionSessionAtom } from "../atoms"
 import { SelectionToolbar } from "../index"
 
 // Mock child components
+vi.mock("../../term-card", () => ({
+  TermExplainButton: () => null,
+}))
+
 vi.mock("../translate-button", () => ({
   TranslateButton: () => null,
 }))
