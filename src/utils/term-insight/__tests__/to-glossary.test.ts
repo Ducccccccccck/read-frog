@@ -89,7 +89,8 @@ describe("createTermInsightMatcher", () => {
   it("finds the terms that occur in a paragraph, with their Persian wording", () => {
     const result = matcher.match("An LLM uses Machine Learning at scale.")
     // The matcher does not promise an order, only the set of hits.
-    expect(result.map((term) => [term.source, term.target]).sort()).toEqual([
+    const sorted = [...result].sort((a, b) => a.source.localeCompare(b.source))
+    expect(sorted.map((term) => [term.source, term.target])).toEqual([
       ["LLM", "مدل زبانی بزرگ"],
       ["machine learning", "یادگیری ماشین"],
     ])
