@@ -35,9 +35,13 @@ export function useAltHoverExplain(enabled: boolean) {
         return
       }
       if (
-        event.composedPath().some(
-          (node) => node instanceof Element && node.hasAttribute(SELECTION_CONTENT_OVERLAY_ROOT_ATTRIBUTE),
-        )
+        event
+          .composedPath()
+          .some(
+            (node) =>
+              node instanceof Element &&
+              node.hasAttribute(SELECTION_CONTENT_OVERLAY_ROOT_ATTRIBUTE),
+          )
       ) {
         clear()
         return
@@ -49,7 +53,12 @@ export function useAltHoverExplain(enabled: boolean) {
         timer = null
         const word = getWordAtPoint(x, y)
         // Still resting on the word that already has its card: leave it be.
-        if (!word || (lastWord && lastWord.text === word.text && Math.hypot(lastWord.x - x, lastWord.y - y) < 40)) {
+        if (
+          !word ||
+          (lastWord &&
+            lastWord.text === word.text &&
+            Math.hypot(lastWord.x - x, lastWord.y - y) < 40)
+        ) {
           return
         }
         lastWord = { text: word.text, x, y }

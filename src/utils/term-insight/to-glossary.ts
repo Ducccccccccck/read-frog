@@ -1,6 +1,6 @@
 import type { LangCodeISO6393 } from "@read-frog/definitions"
-import type { GlossaryEntry, GlossaryMatcher, MatchedTerm } from "@/utils/glossary/types"
 import type { TermInsight } from "./types"
+import type { GlossaryEntry, GlossaryMatcher, MatchedTerm } from "@/utils/glossary/types"
 import { buildMatchKey } from "@/utils/glossary/match-key"
 import { createGlossaryMatcher } from "@/utils/glossary/matcher"
 

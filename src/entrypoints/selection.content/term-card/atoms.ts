@@ -14,12 +14,9 @@ let nextTermCardRequestId = 0
 
 export const termCardAtom = atom<TermCardRequest | null>(null)
 
-export const openTermCardAtom = atom(
-  null,
-  (_get, set, request: Omit<TermCardRequest, "id">) => {
-    set(termCardAtom, { ...request, id: ++nextTermCardRequestId })
-  },
-)
+export const openTermCardAtom = atom(null, (_get, set, request: Omit<TermCardRequest, "id">) => {
+  set(termCardAtom, { ...request, id: ++nextTermCardRequestId })
+})
 
 export const closeTermCardAtom = atom(null, (_get, set) => {
   set(termCardAtom, null)

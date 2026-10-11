@@ -81,15 +81,11 @@ export async function getTermExplanation(
 
   const hostedRequestId = providerRef.kind === "system" ? getRandomUUID() : undefined
   const thunk = async (signal?: AbortSignal) =>
-    await explainSelectedText(
-      { text, context: args.context, title: args.webTitle },
-      routing,
-      {
-        signal,
-        generate: (payload, runOptions) =>
-          generateTextForProviderRef({ ...payload, requestId: hostedRequestId }, runOptions),
-      },
-    )
+    await explainSelectedText({ text, context: args.context, title: args.webTitle }, routing, {
+      signal,
+      generate: (payload, runOptions) =>
+        generateTextForProviderRef({ ...payload, requestId: hostedRequestId }, runOptions),
+    })
 
   try {
     const insight = await requestQueue.enqueue(thunk, Date.now(), `explain:${memoryKey}`)

@@ -18,7 +18,7 @@ const ANCHOR_GAP = 10
 
 function useTermExplanationQuery(request: { id: number; text: string; context: string }) {
   return useQuery({
-    queryKey: ["term-explain", request.id],
+    queryKey: ["term-explain", request.id, request.text, request.context],
     queryFn: () => explainSelectedTerm(request.text, request.context),
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: 60_000,
@@ -26,7 +26,15 @@ function useTermExplanationQuery(request: { id: number; text: string; context: s
   })
 }
 
-function Section({ label, dir, children }: { label: string; dir: "rtl" | "ltr"; children: string }) {
+function Section({
+  label,
+  dir,
+  children,
+}: {
+  label: string
+  dir: "rtl" | "ltr"
+  children: string
+}) {
   return (
     <div className="space-y-0.5">
       <div className="text-[11px] font-medium tracking-wide text-muted-foreground">{label}</div>
@@ -158,6 +166,7 @@ function TermCardBody({
   // The content changes height when the answer arrives.
   useLayoutEffect(() => {
     onResize()
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- the statuses are re-run triggers, not values the effect body reads
   }, [onResize, query.status, result?.status])
 
   return (

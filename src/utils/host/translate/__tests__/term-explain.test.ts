@@ -1,19 +1,25 @@
 import type { Config } from "@/types/config/config"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getLocalConfigMock, sendMessageMock, resolveRefMock, pageProviderMock, selectionProviderMock } =
-  vi.hoisted(() => ({
-    getLocalConfigMock: vi.fn(),
-    sendMessageMock: vi.fn(),
-    resolveRefMock: vi.fn(),
-    pageProviderMock: vi.fn(),
-    selectionProviderMock: vi.fn(),
-  }))
+const {
+  getLocalConfigMock,
+  sendMessageMock,
+  resolveRefMock,
+  pageProviderMock,
+  selectionProviderMock,
+} = vi.hoisted(() => ({
+  getLocalConfigMock: vi.fn<() => Promise<unknown>>(),
+  sendMessageMock: vi.fn<(name: string, data: Record<string, unknown>) => Promise<unknown>>(),
+  resolveRefMock:
+    vi.fn<(provider: unknown, session: unknown, feature: unknown) => Promise<unknown>>(),
+  pageProviderMock: vi.fn<(config: unknown) => unknown>(),
+  selectionProviderMock: vi.fn<(...args: unknown[]) => unknown>(),
+}))
 
 vi.mock("@/utils/config/storage", () => ({ getLocalConfig: getLocalConfigMock }))
 vi.mock("@/utils/message", () => ({ sendMessage: sendMessageMock }))
 vi.mock("@/utils/logger", () => ({
-  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+  logger: { warn: vi.fn<() => void>(), error: vi.fn<() => void>(), info: vi.fn<() => void>() },
 }))
 vi.mock("../translate-text", () => ({ resolvePageProviderRef: resolveRefMock }))
 vi.mock("../webpage-context", () => ({

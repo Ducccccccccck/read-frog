@@ -4,7 +4,10 @@ import type { GlossaryMatcher } from "@/utils/glossary/types"
 import type { PromptableProviderRef } from "@/utils/providers/provider-ref"
 import { logger } from "@/utils/logger"
 import { getProviderCacheIdentity } from "@/utils/providers/provider-ref"
-import { createTermInsightMatcher, TERM_INSIGHT_TARGET_LANG } from "@/utils/term-insight/to-glossary"
+import {
+  createTermInsightMatcher,
+  TERM_INSIGHT_TARGET_LANG,
+} from "@/utils/term-insight/to-glossary"
 import { getOrGenerateWebPageTerms } from "./webpage-terms"
 
 /**
@@ -88,7 +91,7 @@ export async function getPageTermsMatcher(args: {
   waitMs?: number
 }): Promise<GlossaryMatcher | null> {
   const { context, providerRef, targetLang, waitMs = PAGE_TERMS_WAIT_MS } = args
-  if (targetLang !== TERM_INSIGHT_TARGET_LANG || !context || !context.webContent.trim()) {
+  if (targetLang !== TERM_INSIGHT_TARGET_LANG || !context?.webContent.trim()) {
     return null
   }
 

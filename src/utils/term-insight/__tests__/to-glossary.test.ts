@@ -1,5 +1,5 @@
-import type { MatchedTerm } from "@/utils/glossary/types"
 import type { TermInsight } from "../types"
+import type { MatchedTerm } from "@/utils/glossary/types"
 import { describe, expect, it } from "vitest"
 import { buildMatchKey } from "@/utils/glossary/match-key"
 import {
@@ -37,10 +37,7 @@ describe("termInsightsToGlossaryEntries", () => {
   })
 
   it("does not enforce terms the model is unsure about", () => {
-    const terms = [
-      insight("LLM", "مدل زبانی بزرگ"),
-      insight("Foo", "فو", { confidence: "low" }),
-    ]
+    const terms = [insight("LLM", "مدل زبانی بزرگ"), insight("Foo", "فو", { confidence: "low" })]
     const entries = termInsightsToGlossaryEntries(terms, "pes")
     expect(entries.map((entry) => entry.source)).toEqual(["LLM"])
   })
@@ -78,10 +75,7 @@ describe("termInsightsToGlossaryEntries", () => {
   })
 
   it("skips entries with an empty source or an empty Persian rendering", () => {
-    const entries = termInsightsToGlossaryEntries(
-      [insight("  ", "x"), insight("RAG", "  ")],
-      "pes",
-    )
+    const entries = termInsightsToGlossaryEntries([insight("  ", "x"), insight("RAG", "  ")], "pes")
     expect(entries).toEqual([])
   })
 })
@@ -94,7 +88,8 @@ describe("createTermInsightMatcher", () => {
 
   it("finds the terms that occur in a paragraph, with their Persian wording", () => {
     const result = matcher.match("An LLM uses Machine Learning at scale.")
-    expect(result.map((term) => [term.source, term.target])).toEqual([
+    // The matcher does not promise an order, only the set of hits.
+    expect(result.map((term) => [term.source, term.target]).sort()).toEqual([
       ["LLM", "مدل زبانی بزرگ"],
       ["machine learning", "یادگیری ماشین"],
     ])

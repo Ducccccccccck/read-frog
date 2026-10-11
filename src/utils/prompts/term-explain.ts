@@ -9,11 +9,10 @@ export const TERM_EXPLAIN_MAX_CONTEXT_LENGTH = 600
  * answered from the page cache and one answered by the model render the same.
  * Page text and the selection are untrusted data, not instructions.
  */
-export function getTermExplainPrompt(args: {
-  text: string
-  context: string
-  title: string
-}): { systemPrompt: string; prompt: string } {
+export function getTermExplainPrompt(args: { text: string; context: string; title: string }): {
+  systemPrompt: string
+  prompt: string
+} {
   const { text, context, title } = args
 
   return {

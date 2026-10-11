@@ -23,6 +23,11 @@ const insight = {
   confidence: "high",
 }
 
+type Generate = (
+  payload: BackgroundGenerateTextPayload,
+  opts: { signal?: AbortSignal },
+) => Promise<string>
+
 describe("parseSingleTermInsight", () => {
   it("parses a bare object", () => {
     expect(parseSingleTermInsight(JSON.stringify(insight))).toEqual(insight)
@@ -45,9 +50,7 @@ describe("parseSingleTermInsight", () => {
 
 describe("explainSelectedText", () => {
   it("sends the selection, context and title and returns the parsed explanation", async () => {
-    const generate = vi.fn<
-      (payload: BackgroundGenerateTextPayload, opts: { signal?: AbortSignal }) => Promise<string>
-    >(async () => JSON.stringify(insight))
+    const generate = vi.fn<Generate>(async () => JSON.stringify(insight))
 
     const result = await explainSelectedText(
       { text: "latency", context: "High latency hurts users.", title: "Networks" },
@@ -64,7 +67,7 @@ describe("explainSelectedText", () => {
   })
 
   it("passes the hosted feature through for a system provider", async () => {
-    const generate = vi.fn(async () => JSON.stringify(insight))
+    const generate = vi.fn<Generate>(async () => JSON.stringify(insight))
     await explainSelectedText({ text: "latency", context: "", title: "" }, hostedRouting, {
       generate,
     })
@@ -72,7 +75,7 @@ describe("explainSelectedText", () => {
   })
 
   it("returns null without a model call for an empty selection", async () => {
-    const generate = vi.fn(async () => "{}")
+    const generate = vi.fn<Generate>(async () => "{}")
     expect(
       await explainSelectedText({ text: "   ", context: "", title: "" }, localRouting, {
         generate,
@@ -82,7 +85,7 @@ describe("explainSelectedText", () => {
   })
 
   it("returns null when the model call fails", async () => {
-    const generate = vi.fn(async () => {
+    const generate = vi.fn<Generate>(async () => {
       throw new Error("boom")
     })
     expect(

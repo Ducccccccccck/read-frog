@@ -383,7 +383,9 @@ describe("translate-text", () => {
       const result = await translateTextForPageTitle("Source Title To Translate")
 
       expect(result).toBe("translated page title")
-      expect(mockGetOrCreateWebPageContext).toHaveBeenCalledTimes(1)
+      // Two readers of the cached page context: the prompt context and the
+      // page term pass that keeps specialized terms consistent.
+      expect(mockGetOrCreateWebPageContext).toHaveBeenCalledTimes(2)
       expect(mockGetOrGenerateWebPageSummary).not.toHaveBeenCalled()
       expect(mockSendMessage).toHaveBeenCalledWith(
         "enqueueTranslateRequest",

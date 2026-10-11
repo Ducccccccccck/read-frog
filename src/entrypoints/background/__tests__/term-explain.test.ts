@@ -11,7 +11,10 @@ const { dbGetMock, generateMock } = vi.hoisted(() => ({
 vi.mock("@/utils/db/dexie/db", () => ({ db: { termInsightCache: { get: dbGetMock } } }))
 vi.mock("../background-stream", () => ({ generateTextForProviderRef: generateMock }))
 
-const providerRef = { kind: "local", config: { id: "p1" } } as unknown as PromptableProviderRef
+const providerRef = { kind: "local", config: { id: "p1" } } as unknown as Extract<
+  PromptableProviderRef,
+  { kind: "local" }
+>
 
 // Runs the task immediately, like a queue with no limits.
 const requestQueue = {

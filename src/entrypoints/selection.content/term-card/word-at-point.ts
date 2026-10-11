@@ -11,14 +11,14 @@ export function expandWordBounds(
   text: string,
   offset: number,
 ): { start: number; end: number } | null {
-  if (offset < 0 || offset >= text.length || !WORD_CHAR.test(text[offset])) {
+  if (offset < 0 || offset >= text.length || !WORD_CHAR.test(text.charAt(offset))) {
     return null
   }
 
   let start = offset
   let end = offset + 1
-  while (start > 0 && WORD_CHAR.test(text[start - 1])) start -= 1
-  while (end < text.length && WORD_CHAR.test(text[end])) end += 1
+  while (start > 0 && WORD_CHAR.test(text.charAt(start - 1))) start -= 1
+  while (end < text.length && WORD_CHAR.test(text.charAt(end))) end += 1
 
   // Leading or trailing hyphens and apostrophes belong to the punctuation.
   const word = text.slice(start, end)
@@ -44,12 +44,17 @@ function caretFromPoint(x: number, y: number): { node: Node; offset: number } | 
 
 function isEditable(node: Node): boolean {
   const element = node instanceof Element ? node : node.parentElement
-  return Boolean(element?.closest("input, textarea, select, [contenteditable]:not([contenteditable=false])"))
+  return Boolean(
+    element?.closest("input, textarea, select, [contenteditable]:not([contenteditable=false])"),
+  )
 }
 
 function rectContains(rect: DOMRect, x: number, y: number, slop = 2): boolean {
   return (
-    x >= rect.left - slop && x <= rect.right + slop && y >= rect.top - slop && y <= rect.bottom + slop
+    x >= rect.left - slop &&
+    x <= rect.right + slop &&
+    y >= rect.top - slop &&
+    y <= rect.bottom + slop
   )
 }
 
