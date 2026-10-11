@@ -67,7 +67,7 @@ export default defineConfig({
     // moz-extension:// URLs on regular pages. Firefox enforces this more strictly.
     web_accessible_resources: [
       {
-        resources: ["assets/*.png", "assets/*.svg", "assets/*.webp"],
+        resources: ["assets/*.png", "assets/*.svg", "assets/*.webp", "assets/*.woff2"],
         matches: ["*://*/*", "file:///*"],
       },
     ],

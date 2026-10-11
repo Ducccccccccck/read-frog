@@ -11,6 +11,7 @@ import {
   SELECTION_CONTENT_OVERLAY_ROOT_ATTRIBUTE,
 } from "../overlay-layers"
 import { closeTermCardAtom, termCardAtom } from "./atoms"
+import { ensurePersianFont, PERSIAN_FONT_STACK } from "./persian-font"
 
 const CARD_WIDTH = 340
 const VIEWPORT_MARGIN = 8
@@ -38,7 +39,13 @@ function Section({
   return (
     <div className="space-y-0.5">
       <div className="text-[11px] font-medium tracking-wide text-muted-foreground">{label}</div>
-      <p dir={dir} className="text-sm leading-6 [overflow-wrap:anywhere] break-words">
+      <p
+        dir={dir}
+        className={cn(
+          "text-sm [overflow-wrap:anywhere] break-words",
+          dir === "rtl" ? "leading-7" : "leading-6",
+        )}
+      >
         {children}
       </p>
     </div>
@@ -163,6 +170,11 @@ function TermCardBody({
   const query = useTermExplanationQuery(request)
   const result = query.data
 
+  // Vazirmatn loads on first use; the card is re-measured once it is in.
+  useEffect(() => {
+    void ensurePersianFont().then(onResize)
+  }, [onResize])
+
   // The content changes height when the answer arrives.
   useLayoutEffect(() => {
     onResize()
@@ -174,6 +186,7 @@ function TermCardBody({
       ref={cardRef}
       role="dialog"
       aria-label="Term explanation"
+      style={{ fontFamily: PERSIAN_FONT_STACK }}
       className={cn(
         NOTRANSLATE_CLASS,
         `pointer-events-auto fixed ${SELECTION_CONTENT_OVERLAY_LAYERS.selectionOverlay}`,
