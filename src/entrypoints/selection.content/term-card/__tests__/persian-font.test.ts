@@ -43,7 +43,9 @@ describe("ensurePersianFont", () => {
 
     expect(constructed).toHaveLength(1)
     expect(constructed[0]!.family).toBe(PERSIAN_FONT_FAMILY)
-    expect(constructed[0]!.source).toMatch(/^url\("chrome-extension:\/\/[^/]+\/.*Vazirmatn-Variable/)
+    expect(constructed[0]!.source).toMatch(
+      /^url\("chrome-extension:\/\/[^/]+\/.*Vazirmatn-Variable/,
+    )
     expect(constructed[0]!.descriptors.unicodeRange).toBe(PERSIAN_UNICODE_RANGE)
     expect(addMock).toHaveBeenCalledTimes(1)
   })
